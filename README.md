@@ -56,7 +56,6 @@ Event: 7 failed login attempts
 
 User: eve
 
-Time: 2025-07-08T18:15:21Z
 ---
 
 ## 🧱 Technologies Used
@@ -67,9 +66,7 @@ Time: 2025-07-08T18:15:21Z
 - **Slack (alerting)**
 - (Optional) **Splunk Free Tier** or **CloudWatch Dashboards**
 
-📸 Screenshots
-(Add your own screenshots below)
-
+## 📸 Screenshots
 Simulated Logs	to S3
 <img width="1662" height="467" alt="image" src="https://github.com/user-attachments/assets/c7e454a3-39fe-453a-bd6b-5b42ba72a7ef" />
 <img width="797" height="670" alt="image" src="https://github.com/user-attachments/assets/1edc270b-719c-4734-9397-6945350222b8" />
