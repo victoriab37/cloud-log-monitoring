@@ -1,43 +1,81 @@
 import json
-from collections import defaultdict
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'alerts')))
+import logging
+from collections import defaultdict
+from dotenv import load_dotenv
 
+load_dotenv()
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'alerts')))
 from send_alert import send_alert
 
-# Configurable threshold
-FAILURE_THRESHOLD = 3
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-def detect_failed_logins(logs):
+FAILURE_THRESHOLD = 2
+LOG_FILE = os.getenv("SECURITY_LOG_FILE", "./cloud-log-monitoring/security_logs.json")
+
+def load_logs(filepath):
+    try:
+        with open(filepath) as f:
+            logs = json.load(f)
+        logging.info(f"Loaded {len(logs)} log entries from {filepath}")
+        return logs
+    except FileNotFoundError:
+        logging.error(f"Log file not found: {filepath}")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        logging.error(f"Log file {filepath} is not valid JSON.")
+        sys.exit(1)
+
+def detect_failed_logins(logs, failure_threshold=FAILURE_THRESHOLD):
     failure_counts = defaultdict(int)
+    failure_users = defaultdict(set)
 
     for log in logs:
-        if log.get("event_type") == "login_failure":
-            ip = log.get("ip")
+        if not isinstance(log, dict):
+            continue
+        if log.get("event_type") == "login_failure" and "ip" in log:
+            ip = log["ip"]
             failure_counts[ip] += 1
+            user = log.get("user")
+            if user:
+                failure_users[ip].add(user)
 
     for ip, count in failure_counts.items():
-        if count >= FAILURE_THRESHOLD:
-            alert_msg = f"🚨 ALERT: {count} failed logins from {ip}"
-            print(alert_msg)
+        if count >= failure_threshold:
+            users = ", ".join(failure_users[ip]) if failure_users[ip] else "Unknown users"
+            alert_msg = (
+                f"🚨 *Failed Login Alert*\n"
+                f"*Count:* {count}\n"
+                f"*IP:* {ip}\n"
+                f"*Users:* {users}"
+            )
+            logging.warning(alert_msg.replace('\n', ' | '))
             send_alert(alert_msg)
 
 def detect_sudo_use(logs):
     for log in logs:
-        if log.get("event_type") == "sudo_command":
-            alert_msg = f"⚠️ SUDO alert: {log['user']} ran a sudo command from {log['ip']}"
-            print(alert_msg)
+        if not isinstance(log, dict):
+            continue
+        if log.get("event_type") == "sudo_command" and "user" in log and "ip" in log:
+            alert_msg = (
+                f"⚠️ *SUDO Alert*\n"
+                f"*User:* {log['user']}\n"
+                f"*IP:* {log['ip']}\n"
+                f"Command: sudo"
+            )
+            logging.warning(alert_msg.replace('\n', ' | '))
             send_alert(alert_msg)
 
-if __name__ == "__main__":
-    LOG_FILE = "./cloud-log-monitoring/log_ingestion/security_logs.json"
-
-    print(f"Opening log file: {LOG_FILE}")
-    with open(LOG_FILE) as f:
-        logs = json.load(f)
-
-    print(f"Loaded {len(logs)} log entries")
+def run_detections(logs):
     detect_failed_logins(logs)
     detect_sudo_use(logs)
-    print("Detection complete.")
+
+if __name__ == "__main__":
+    logs = load_logs(LOG_FILE)
+    run_detections(logs)
+    logging.info("Detection complete.")

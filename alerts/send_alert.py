@@ -1,15 +1,24 @@
+import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+print("Slack webhook URL:", os.getenv("SLACK_WEBHOOK_URL"))
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 def send_alert(message):
-    webhook_url = 'https://hooks.slack.com/services/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'
+    if not SLACK_WEBHOOK_URL:
+        print("❌ Slack webhook URL not found.")
+        return
+
     payload = {"text": message}
+    response = requests.post(SLACK_WEBHOOK_URL, json=payload)
 
-    response = requests.post(webhook_url, json=payload)
-
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
+    if response.status_code == 200:
+        print("✅ Alert sent successfully.")
     else:
-        print("✅ Alert sent successfully!")
+        print(f"❌ Failed to send alert: {response.status_code} {response.text}")
 
 if __name__ == "__main__":
-    send_alert("🚨 Test alert from my mini SIEM!")
+    print("send_alert.py is running!")
+    send_alert("🚨 Test alert from send_alert.py")
