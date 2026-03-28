@@ -3,7 +3,7 @@
 A cloud-native, lightweight security monitoring system that detects suspicious activity (e.g., brute force login attempts) using AWS services and Python. Alerts are triggered via Slack for investigation—mimicking a basic SIEM pipeline.
 
 📖 **Read the full build story on Medium:**  
-👉 [How I Built a Cloud-Native Mini SIEM to Detect Threats and Send Real-Time Alerts](https://medium.com/@victoriab37/how-i-built-a-cloud-native-mini-siem-to-detect-threats-and-send-real-time-alerts-c005cd370f60)
+👉 [How I Built a Cloud-Native Mini SIEM to Detect Threats and Send Real-Time Alerts](https://medium.com/@victoria-browning/how-i-built-a-cloud-native-mini-siem-to-detect-threats-and-send-real-time-alerts-c005cd370f60)
 
 ---
 
